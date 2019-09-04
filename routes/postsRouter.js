@@ -1,13 +1,13 @@
 const express = require('express');
-const database = require('./data/db');
+const router = express.Router();
+const database = require('../data/db');
 
-const server = express();
 
-server.use(express.json()) // for parsing application/json
-server.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+
+
 
 // using insert, which takes post as a param--post has two required items title and contents
-server.post('/api/posts', (req, res) => {
+router.post('/', (req, res) => {
     if (!('title' in req.body) || !('contents' in req.body)) {
         res.status(400).json({ errorMessage: "Please provide title and contents for the post." })
     }
@@ -18,7 +18,7 @@ server.post('/api/posts', (req, res) => {
 
 
 // using insertComment which takes comment as a param 
-server.post('/api/posts/:id/comments', (req, res) => {
+router.post('/:id/comments', (req, res) => {
     database.insert({ text: req.body.text, post_id: req.body.post_id })
 
         .then((data) => {
@@ -35,18 +35,19 @@ server.post('/api/posts/:id/comments', (req, res) => {
                 res.status(400).json({ errorMessage: "Please provide text for the comment." })
             }
             else (res.status(500).json({ error: "There was an error while saving the comment to the database" }))
-        });
+        })
+    });
 
 
 
-    server.get('/api/posts', (req, res) => {
+    router.get('/', (req, res) => {
         database.find()
             .then((data) => res.status(200).json(data))
             .catch((err) => res.status(500).json({ error: "The users information could not be retrieved." }))
     });
 
 
-    server.get('/api/posts/:id', (req, res) => {
+    router.get('/:id', (req, res) => {
         database.findById(req.params['id'])
             .then((data) => {
                 if (data === undefined) { res.status(404).json({ message: "The post with the specified ID does not exist." }) }
@@ -57,7 +58,7 @@ server.post('/api/posts/:id/comments', (req, res) => {
             .catch((err) => res.status(500).json({ error: "The post information could not be retrieved." }))
     });
 
-    server.get('/api/posts/:id/comments', (req, res) => {
+    router.get('/:id/comments', (req, res) => {
         database.findCommentById(req.params['id'])
             .then((data) => {
                 if (data === undefined) { res.status(404).json({ message: "The post with the specified ID does not exist." }) }
@@ -66,7 +67,7 @@ server.post('/api/posts/:id/comments', (req, res) => {
             .catch((err) => res.status(500).json({ error: "The comments information could not be retrieved." }))
     });
 
-    server.delete('/api/posts/:id', (req, res) => {
+    router.delete('/:id', (req, res) => {
         database.remove(req.params['.id'])
          .then((data) => { 
              if (data === undefined) {
@@ -76,7 +77,7 @@ server.post('/api/posts/:id/comments', (req, res) => {
            });
        
 
-           server.put('/api/posts/:id', (req, res) => {     
+           router.put('/:id', (req, res) => {     
             database.update(req.params['.id'], {title: req.body.title, contents: req.body.contents})
             .then((data) => {
                 if (data === undefined) {
@@ -88,4 +89,7 @@ server.post('/api/posts/:id/comments', (req, res) => {
             .catch((err) => res.status(500).json({error: "The post information could not be modified."}))
         })    
 
-    server.listen(8000, () => console.log('API running on port 8000'));
+
+        module.exports = router;
+
+   
